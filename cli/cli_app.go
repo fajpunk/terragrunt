@@ -28,7 +28,8 @@ const CMD_ACQUIRE_LOCK = "acquire-lock"
 const CMD_RELEASE_LOCK = "release-lock"
 const CMD_SPIN_UP = "spin-up"
 const CMD_TEAR_DOWN = "tear-down"
-var MULTI_MODULE_COMMANDS = []string{CMD_SPIN_UP, CMD_TEAR_DOWN}
+const CMD_PLAN_ALL = "plan-all"
+var MULTI_MODULE_COMMANDS = []string{CMD_SPIN_UP, CMD_TEAR_DOWN, CMD_PLAN_ALL}
 
 // Since Terragrunt is just a thin wrapper for Terraform, and we don't want to repeat every single Terraform command
 // in its definition, we don't quite fit into the model of any Go CLI library. Fortunately, urfave/cli allows us to
@@ -173,6 +174,8 @@ func runMultiModuleCommand(command string, terragruntOptions *options.Terragrunt
 		return spinUp(terragruntOptions)
 	case CMD_TEAR_DOWN:
 		return tearDown(terragruntOptions)
+	case CMD_PLAN_ALL:
+		return planAll(terragruntOptions)
 	default:
 		return errors.WithStackTrace(UnrecognizedCommand(command))
 	}
@@ -247,6 +250,18 @@ func runTerraformCommandWithLock(lock locks.Lock, terragruntOptions *options.Ter
 	default:
 		return runTerraformCommand(terragruntOptions)
 	}
+}
+
+// Plan an entire "stack" by running 'terragrunt plan' in each subfolder, processing them in the right order based
+// on terraform_remote_state dependencies.
+func planAll(terragruntOptions *options.TerragruntOptions) error {
+	stack, err := spin.FindStackInSubfolders(terragruntOptions)
+	if err != nil {
+		return err
+	}
+
+	terragruntOptions.Logger.Printf("%s", stack.String())
+	return stack.Plan(terragruntOptions)
 }
 
 // Spin up an entire "stack" by running 'terragrunt apply' in each subfolder, processing them in the right order based

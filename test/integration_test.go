@@ -174,7 +174,7 @@ func TestTerragruntWorksWithIncludesParentUpdatedAndOldConfig(t *testing.T) {
 	runTerragrunt(t, fmt.Sprintf("terragrunt apply --terragrunt-non-interactive --terragrunt-config %s --terragrunt-working-dir %s", tmpTerragruntConfigPath, childPath))
 }
 
-func TestTerragruntSpinUpAndTearDown(t *testing.T) {
+func TestTerragruntSpinUpAndPlanAllAndTearDown(t *testing.T) {
 	t.Parallel()
 
 	s3BucketName := fmt.Sprintf("terragrunt-test-bucket-%s", strings.ToLower(uniqueId()))
@@ -189,6 +189,9 @@ func TestTerragruntSpinUpAndTearDown(t *testing.T) {
 
 	defer deleteS3Bucket(t, TERRAFORM_REMOTE_STATE_S3_REGION, s3BucketName)
 	defer cleanupTableForTest(t, "terragrunt_locks_test_fixture_stack")
+
+	runTerragrunt(t, fmt.Sprintf("terragrunt plan-all --terragrunt-non-interactive --terragrunt-working-dir %s -var terraform_remote_state_s3_bucket=\"%s\"", mgmtEnvironmentPath, s3BucketName))
+	runTerragrunt(t, fmt.Sprintf("terragrunt plan-all --terragrunt-non-interactive --terragrunt-working-dir %s -var terraform_remote_state_s3_bucket=\"%s\"", stageEnvironmentPath, s3BucketName))
 
 	runTerragrunt(t, fmt.Sprintf("terragrunt spin-up --terragrunt-non-interactive --terragrunt-working-dir %s -var terraform_remote_state_s3_bucket=\"%s\"", mgmtEnvironmentPath, s3BucketName))
 	runTerragrunt(t, fmt.Sprintf("terragrunt spin-up --terragrunt-non-interactive --terragrunt-working-dir %s -var terraform_remote_state_s3_bucket=\"%s\"", stageEnvironmentPath, s3BucketName))

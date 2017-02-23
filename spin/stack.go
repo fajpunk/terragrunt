@@ -33,6 +33,13 @@ func (stack *Stack) Apply(terragruntOptions *options.TerragruntOptions) error {
 	return RunModules(stack.Modules)
 }
 
+// Plan all the modules in the given stack, making sure to plan the dependencies of each module in the stack in the
+// proper order.
+func (stack *Stack) Plan(terragruntOptions *options.TerragruntOptions) error {
+	stack.setTerraformCommand([]string{"plan"})
+	return RunModules(stack.Modules)
+}
+
 // Destroy all the modules in the given stack, making sure to destroy the dependencies of each module in the stack in
 // the proper order.
 func (stack *Stack) Destroy(terragruntOptions *options.TerragruntOptions) error {
